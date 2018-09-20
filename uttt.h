@@ -12,7 +12,7 @@
 #include <iostream>
 
 enum class Player { None, X, O, Active };
-using Move = std::pair<int,int>;
+struct Move { int x, y; };
 struct State {
 	std::array<std::array<Player,9>,9> board;
 	std::array<std::array<Player,3>,3> macroboard;

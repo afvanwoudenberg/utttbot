@@ -34,7 +34,7 @@ std::ostream &operator<<(std::ostream& os, const State &s) {
 }
 
 std::ostream &operator<<(std::ostream& os, const Move &m) {
-	os << m.first << " " << m.second;
+	os << m.x << " " << m.y;
 	return os;
 }
 
@@ -82,11 +82,11 @@ State doMove(const State &state, const Move &m)
 {
 	State result = state;
 
-	if (state.macroboard[m.first/3][m.second/3] != Player::Active) {
+	if (state.macroboard[m.y/3][m.x/3] != Player::Active) {
 		return result; // Invalid move
 	}
 
-	result.board[m.first][m.second] = getCurrentPlayer(state);
+	result.board[m.y][m.x] = getCurrentPlayer(state);
 	for (int r=0; r<3; r++) {
 		for (int c=0; c<3; c++) {
 			result.macroboard[r][c] = getWinner(result, r, c);
@@ -99,10 +99,10 @@ State doMove(const State &state, const Move &m)
 			if (result.board[r][c] == Player::None)
 				empty++;
 	bool stillPlaying = empty > 0 && getWinner(result) == Player::None;
-	if (result.macroboard[m.first%3][m.second%3] == Player::Active)
+	if (result.macroboard[m.y%3][m.x%3] == Player::Active)
 		for (int r=0; r<3; r++)
 			for (int c=0; c<3; c++)
-				if ((r!=m.first%3 || c!=m.second%3 || !stillPlaying) && result.macroboard[r][c] == Player::Active)
+				if ((r!=m.y%3 || c!=m.x%3 || !stillPlaying) && result.macroboard[r][c] == Player::Active)
 					result.macroboard[r][c] = Player::None;
 
 	return result; 
@@ -138,7 +138,7 @@ std::vector<Move> getMoves(const State &state)
 		for (int r=0; r<9; r++) {
 			for (int c=0; c<9; c++) {
 				if (state.macroboard[r/3][c/3] == Player::Active && state.board[r][c] == Player::None) {
-					moves.push_back(std::make_pair(r,c));
+					moves.push_back(Move{c,r});
 				}
 			}
 		}

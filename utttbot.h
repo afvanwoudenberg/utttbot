@@ -27,7 +27,6 @@ class UTTTBot {
 	void move(int timeout);
 
 public:
-	UTTTBot() { std::cerr << state << std::endl; }
 	void run();
 };
 
