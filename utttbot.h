@@ -19,10 +19,7 @@ class UTTTBot {
 	int field_rows;
 
 	int round;
-	State state = {
-		{ { { { Player::None } } } },
-		{ { { { Player::Active } } } }
-	};
+	State state;
 
 	std::vector<std::string> split(const std::string &s, char delim);
 	void setting(std::string &key, std::string &value);
@@ -30,6 +27,7 @@ class UTTTBot {
 	void move(int timeout);
 
 public:
+	UTTTBot() { std::cerr << state << std::endl; }
 	void run();
 };
 

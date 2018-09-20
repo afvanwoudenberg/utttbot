@@ -16,6 +16,15 @@ using Move = std::pair<int,int>;
 struct State {
 	std::array<std::array<Player,9>,9> board;
 	std::array<std::array<Player,3>,3> macroboard;
+
+	State() {
+		for (int r=0; r<9; r++)
+			for (int c=0; c<9; c++)
+				board[r][c] = Player::None;
+		for (int r=0; r<3; r++)
+			for (int c=0; c<3; c++)
+				macroboard[r][c] = Player::Active;
+	}
 };
 
 // used to get a random element from a container

@@ -23,6 +23,13 @@ std::ostream &operator<<(std::ostream& os, const State &s) {
 		}
 		os << std::endl;
 	}
+	os << std::endl;
+	for (int r=0; r<3; r++) {
+		for (int c=0; c<3; c++) {
+			os << s.macroboard[r][c];
+		}
+		os << std::endl;
+	}
 	return os;
 }
 
@@ -33,55 +40,95 @@ std::ostream &operator<<(std::ostream& os, const Move &m) {
 
 Player getCurrentPlayer(const State &state)
 {
-    int countX = 0;
-    int countO = 0;
-    for (int r=0; r<6; r++) {
-		for (int c=0; c<7; c++) {
-        	if (state[r][c] == Player::X) countX++;
-        	else if(state[r][c] == Player::O) countO++;
+	int countX = 0;
+	int countO = 0;
+	for (int r=0; r<9; r++) {
+		for (int c=0; c<9; c++) {
+			if (state.board[r][c] == Player::X) countX++;
+			else if (state.board[r][c] == Player::O) countO++;
 		}
-    }
-    return (countX > countO ? Player::O : Player::X); 
+	}
+	return (countX > countO ? Player::O : Player::X); 
+}
+
+Player getWinner(const State &state, int row, int col)
+{
+	for (int r=0; r<3; r++)
+		if (state.board[row*3+r][col*3] == state.board[row*3+r][col*3+1] && 
+				state.board[row*3+r][col*3+1] == state.board[row*3+r][col*3+2] && 
+				state.board[row*3+r][col*3+2] != Player::None) 
+			return state.board[row*3+r][col*3];
+	for (int c=0; c<3; c++)
+		if (state.board[row*3][col*3+c] == state.board[row*3+1][col*3+c] && 
+				state.board[row*3+1][col*3+c] == state.board[row*3+2][col*3+c] && 
+				state.board[row*3][col*3+c] != Player::None) 
+			return state.board[row*3][col*3+c];
+	if (state.board[row*3][col*3] == state.board[row*3+1][col*3+1] && 
+			state.board[row*3+1][col*3+1] == state.board[row*3+2][col*3+2] && 
+			state.board[row*3][col*3] != Player::None) 
+		return state.board[row*3][col*3];
+	if (state.board[row*3][col*3+2] == state.board[row*3+1][col*3+1] && 
+			state.board[row*3+1][col*3+1] == state.board[row*3+2][col*3] && 
+			state.board[row*3][col*3+2] != Player::None) 
+		return state.board[row*3][col*3+2];
+	for (int r=0; r<3; r++)
+		for (int c=0; c<3; c++)
+			if (state.board[row*3+r][col*3+c] == Player::None)
+				return Player::Active;
+	return Player::None;
 }
 
 State doMove(const State &state, const Move &m)
 {
 	State result = state;
-	for (int r=0; r<6; r++) {
-		if (r == 5 || result[r+1][m] != Player::None) {		
-			result[r][m] = getCurrentPlayer(state);
-			return result;
+
+	if (state.macroboard[m.first/3][m.second/3] != Player::Active) {
+		return result; // Invalid move
+	}
+
+	result.board[m.first][m.second] = getCurrentPlayer(state);
+	for (int r=0; r<3; r++) {
+		for (int c=0; c<3; c++) {
+			result.macroboard[r][c] = getWinner(result, r, c);
 		}
 	}
-	return result; // Invalid move
+
+	int empty = 0;
+	for (int r=0; r<9; r++)
+		for (int c=0; c<9; c++)
+			if (result.board[r][c] == Player::None)
+				empty++;
+	bool stillPlaying = empty > 0 && getWinner(result) == Player::None;
+	if (result.macroboard[m.first%3][m.second%3] == Player::Active)
+		for (int r=0; r<3; r++)
+			for (int c=0; c<3; c++)
+				if ((r!=m.first%3 || c!=m.second%3 || !stillPlaying) && result.macroboard[r][c] == Player::Active)
+					result.macroboard[r][c] = Player::None;
+
+	return result; 
 }
 
 Player getWinner(const State &state)
 {
-	for (int r=0; r<6; r++) {
-		for (int c=0; c<7; c++) {
-			if (state[r][c] != Player::None) {
-				if (c<4) {
-					if (state[r][c] == state[r][c+1] && state[r][c] == state[r][c+2] && state[r][c] == state[r][c+3])
-						return state[r][c];
-					if (r<3) {
-						if (state[r][c] == state[r+1][c+1] && state[r][c] == state[r+2][c+2] && state[r][c] == state[r+3][c+3])
-							return state[r][c];
-					}
-				}
-				if (r<3) {
-					if (state[r][c] == state[r+1][c] && state[r][c] == state[r+2][c] && state[r][c] == state[r+3][c])
-						return state[r][c];
-					if (c>2) {
-						if (state[r][c] == state[r+1][c-1] && state[r][c] == state[r+2][c-2] && state[r][c] == state[r+3][c-3])
-							return state[r][c];
-					}
-				}
-			}
-
-		}
-	}
-    return Player::None;
+	for (int r=0; r<3; r++)
+		if (state.macroboard[r][0] == state.macroboard[r][1] && 
+				state.macroboard[r][1] == state.macroboard[r][2] && 
+				state.macroboard[r][2] != Player::None && 
+				state.macroboard[r][2] != Player::Active) 
+			return state.macroboard[r][2];
+	for (int c=0; c<3; c++)
+		if (state.macroboard[0][c] == state.macroboard[1][c] && 
+				state.macroboard[1][c] == state.macroboard[2][c] && 
+				state.macroboard[2][c] != Player::None && 
+				state.macroboard[2][c] != Player::Active) 
+			return state.macroboard[2][c];
+	if (state.macroboard[0][0] == state.macroboard[1][1] && state.macroboard[1][1] == state.macroboard[2][2] && 
+			state.macroboard[0][0] != Player::None && state.macroboard[0][0] != Player::Active) 
+		return state.macroboard[0][0];
+	if (state.macroboard[0][2] == state.macroboard[1][1] && state.macroboard[1][1] == state.macroboard[2][0] && 
+			state.macroboard[0][2] != Player::None && state.macroboard[0][2] != Player::Active) 
+		return state.macroboard[0][2];
+	return Player::None;
 }
 
 std::vector<Move> getMoves(const State &state)
@@ -90,9 +137,7 @@ std::vector<Move> getMoves(const State &state)
 	if (getWinner(state) == Player::None) {
 		for (int r=0; r<9; r++) {
 			for (int c=0; c<9; c++) {
-				if (state.macroboard[(r<3 ? 0 : (r<6 ? 1 : 2))]
-						[(c<3 ? 0 : (c<6 ? 1 : 2))] == Player::Active &&
-						state.board[r][c] == Player::None) {
+				if (state.macroboard[r/3][c/3] == Player::Active && state.board[r][c] == Player::None) {
 					moves.push_back(std::make_pair(r,c));
 				}
 			}
