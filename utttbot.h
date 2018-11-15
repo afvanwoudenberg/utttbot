@@ -15,8 +15,6 @@ class UTTTBot {
 	std::string player_names[2];
 	std::string your_bot;
 	int your_botid;
-	int field_columns;
-	int field_rows;
 
 	int round;
 	State state;
